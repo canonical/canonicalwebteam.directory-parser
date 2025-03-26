@@ -1,6 +1,7 @@
 import flask
 import re
 import subprocess
+import xml.etree.ElementTree as ET
 from contextlib import suppress
 from pathlib import Path
 
@@ -344,3 +345,57 @@ def scan_directory(path_name, base=None):
                 node["children"].append(child_node)
 
     return node
+
+
+ET.register_namespace("xhtml", "http://www.w3.org/1999/xhtml")
+ET.register_namespace("", "http://www.sitemaps.org/schemas/sitemap/0.9")
+
+
+def indent(elem, level=0):
+    i = "\n" + level * "  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent(elem, level + 1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
+
+def update_sitemap(base_url, sitemap_path, action, files, last_mod):
+    """
+    Update the sitemap with the last modified date of the
+    files that have been added, deleted or updated.
+    """
+    tree = ET.parse(sitemap_path)
+    root = tree.getroot()
+
+    # Extract url path from files
+    files = eval(files)
+    for file in files:
+        path = file.split("templates/")[-1].split(".html")[0]
+        url_path = base_url + "/" + path
+
+        if action == "ADD":
+            url_elem = ET.Element("url")
+            loc_elem = ET.SubElement(url_elem, "loc")
+            loc_elem.text = url_path
+            last_mod_elem = ET.SubElement(url_elem, "lastmod")
+            last_mod_elem.text = last_mod
+            indent(url_elem, 1)
+            root.append(url_elem)
+        elif action == "DELETE":
+            for child in root:
+                if child[0].text == url_path:
+                    root.remove(child)
+        elif action == "UPDATE":
+            for child in root:
+                if child[0].text == url_path:
+                    child[1].text = last_mod
+
+    tree.write(sitemap_path, encoding="utf-8", xml_declaration=True)
