@@ -206,9 +206,19 @@ def is_valid_page(path, extended_path, is_index=True):
     Determine if path is a valid page. Pages are valid if:
     - They contain the same extended path as the index html.
     - They extend from the base html.
+    - Does not have "noindex" in the meta tags.
+    - Does not live in a shared template directory.
     """
     if is_template(path):
         return False
+
+    with path.open("r") as f:
+        for line in f.readlines():
+            if re.search(
+                r'<meta\s+name=["\']robots["\']\s+content=["\'].*?noindex.*?["\']',
+                line
+            ):
+                return False
 
     if not is_index and extended_path:
         with path.open("r") as f:
