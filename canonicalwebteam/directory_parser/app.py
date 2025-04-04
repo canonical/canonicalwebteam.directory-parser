@@ -14,7 +14,7 @@ BASE_TEMPLATES = [
 ]
 MARKDOWN_TEMPLATES = [
     "legal/_base_legal_markdown.html",
-    "appliance/shared/_base_appliance_index.html"
+    "appliance/shared/_base_appliance_index.html",
 ]
 TEMPLATE_PREFIXES = ["base", "_base"]
 TAG_MAPPING = {
@@ -230,7 +230,9 @@ def is_valid_page(path, extended_path, is_index=True):
     if "index.md" in str(path):
         with path.open("r") as f:
             for line in f.readlines():
-                if match := re.search(r"wrapper_template:\s*[\"']?(.*?)[\"']?$", line):
+                if match := re.search(
+                    r"wrapper_template:\s*[\"']?(.*?)[\"']?$", line
+                ):
                     template = match.group(1)
                     if template in MARKDOWN_TEMPLATES:
                         return True
@@ -321,7 +323,7 @@ def scan_directory(path_name, base=None):
 
     is_index_page_valid = False
 
-    # Check if an index.html file exists in this directory
+    # Check if an index.html or index.md file exists in this directory
     (has_index, index_type) = check_has_index(node_path)
     if has_index:
         index_path = node_path / ("index." + index_type)
