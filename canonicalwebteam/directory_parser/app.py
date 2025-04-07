@@ -1,7 +1,6 @@
 import flask
 import re
 import subprocess
-import xml.etree.ElementTree as ET
 from contextlib import suppress
 from pathlib import Path
 
@@ -278,29 +277,19 @@ def get_git_last_modified_time(path):
         return None
 
 
-def generate_sitemap(directory_path, base_url):
-    """
-    Generate sitemap given a directory path and a base url. It uses the
-    local project's templates to generate the sitemap.
-
-    TODO: Include sitemap_template.xml in the directory_parser package
-    """
-    tree = scan_directory(directory_path)
-    xml_sitemap = flask.render_template(
-        "/sitemap_template.xml",
-        tree=tree["children"],
-        base_url=base_url,
-    )
-    return xml_sitemap
-
-
-def scan_directory(path_name, base=None):
+def scan_directory(path_name, exclude_paths=None, base=None):
     """
     We scan a given directory for valid pages and return a tree
     """
     node_path = Path(path_name)
     node = create_node()
     node["name"] = path_name.split("/templates", 1)[-1]
+
+    # Skip scanning directory if it is in excluded paths
+    if exclude_paths:
+        for path in exclude_paths:
+            if re.search(path, node["name"]):
+                return node
 
     # We get the relative parent for the path
     if base is None:
@@ -318,7 +307,9 @@ def scan_directory(path_name, base=None):
         # Get the path extended by the index.html file
         extended_path = get_extended_path(index_path)
         # If the file is valid, add it as a child
-        is_index_page_valid = is_valid_page(index_path, extended_path)
+        is_index_page_valid = is_valid_page(
+            index_path, extended_path
+        )
         if is_index_page_valid:
             # Get tags, add as child
             tags = get_tags_rolling_buffer(index_path)
@@ -350,62 +341,24 @@ def scan_directory(path_name, base=None):
                 node["children"].append(child_tags)
         # If the child is a directory, scan it
         if child.is_dir():
-            child_node = scan_directory(str(child), base=base)
+            child_node = scan_directory(str(child), exclude_paths, base=base)
             if child_node.get("title") or child_node.get("children"):
                 node["children"].append(child_node)
 
     return node
 
 
-ET.register_namespace("xhtml", "http://www.w3.org/1999/xhtml")
-ET.register_namespace("", "http://www.sitemaps.org/schemas/sitemap/0.9")
-
-
-def indent(elem, level=0):
-    i = "\n" + level * "  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            indent(elem, level + 1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
-
-
-def update_sitemap(base_url, sitemap_path, action, files, last_mod):
+def generate_sitemap(directory_path, base_url, exclude_paths=None):
     """
-    Update the sitemap with the last modified date of the
-    files that have been added, deleted or updated.
+    Generate sitemap given a directory path and a base url. It uses the
+    local project's templates to generate the sitemap.
+
+    TODO: Include sitemap_template.xml in the directory_parser package
     """
-    tree = ET.parse(sitemap_path)
-    root = tree.getroot()
-
-    # Extract url path from files
-    files = eval(files)
-    for file in files:
-        path = file.split("templates/")[-1].split(".html")[0]
-        url_path = base_url + "/" + path
-
-        if action == "ADD":
-            url_elem = ET.Element("url")
-            loc_elem = ET.SubElement(url_elem, "loc")
-            loc_elem.text = url_path
-            last_mod_elem = ET.SubElement(url_elem, "lastmod")
-            last_mod_elem.text = last_mod
-            indent(url_elem, 1)
-            root.append(url_elem)
-        elif action == "DELETE":
-            for child in root:
-                if child[0].text == url_path:
-                    root.remove(child)
-        elif action == "UPDATE":
-            for child in root:
-                if child[0].text == url_path:
-                    child[1].text = last_mod
-
-    tree.write(sitemap_path, encoding="utf-8", xml_declaration=True)
+    tree = scan_directory(directory_path, exclude_paths)
+    xml_sitemap = flask.render_template(
+        "/sitemap_template.xml",
+        tree=tree["children"],
+        base_url=base_url,
+    )
+    return xml_sitemap
