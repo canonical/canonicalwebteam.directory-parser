@@ -215,7 +215,7 @@ def is_valid_page(path, extended_path, is_index=True):
         for line in f.readlines():
             if re.search(
                 r'<meta\s+name=["\']robots["\']\s+content=["\'].*?noindex.*?["\']',
-                line
+                line,
             ):
                 return False
 
@@ -307,9 +307,7 @@ def scan_directory(path_name, exclude_paths=None, base=None):
         # Get the path extended by the index.html file
         extended_path = get_extended_path(index_path)
         # If the file is valid, add it as a child
-        is_index_page_valid = is_valid_page(
-            index_path, extended_path
-        )
+        is_index_page_valid = is_valid_page(index_path, extended_path)
         if is_index_page_valid:
             # Get tags, add as child
             tags = get_tags_rolling_buffer(index_path)
