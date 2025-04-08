@@ -11,6 +11,10 @@ BASE_TEMPLATES = [
     "templates/one-column.html",
     "_base/base.html",
 ]
+MARKDOWN_TEMPLATES = [
+    "legal/_base_legal_markdown.html",
+    "appliance/shared/_base_appliance_index.html",
+]
 TEMPLATE_PREFIXES = ["base", "_base"]
 TAG_MAPPING = {
     "title": ["title"],
@@ -20,11 +24,16 @@ TAG_MAPPING = {
 
 
 def is_index(path):
-    return path.name == "index.html"
+    return path.name == "index.html" or path.name == "index.md"
 
 
 def check_has_index(path):
-    return (path / "index.html").exists()
+    if (path / "index.html").exists():
+        return True, "html"
+    elif (path / "index.md").exists():
+        return True, "md"
+    else:
+        return False, None
 
 
 def is_template(path):
@@ -194,7 +203,7 @@ def get_tags_rolling_buffer(path):
                     break
 
     # We add the name from the path
-    raw_name = re.sub(r"(?i)(.html|/index.html)", "", str(path))
+    raw_name = re.sub(r"(?i)(.html|/index.html|/index.md)", "", str(path))
     tags["name"] = raw_name.split("/templates", 1)[-1]
 
     return tags
@@ -207,6 +216,8 @@ def is_valid_page(path, extended_path, is_index=True):
     - They extend from the base html.
     - Does not have "noindex" in the meta tags.
     - Does not live in a shared template directory.
+    - They are markdown files with a valid wrapper template
+
     """
     if is_template(path):
         return False
@@ -214,7 +225,9 @@ def is_valid_page(path, extended_path, is_index=True):
     with path.open("r") as f:
         for line in f.readlines():
             if re.search(
-                r'<meta\s+name=["\']robots["\']\s+content=["\'].*?noindex.*?["\']',
+                r"<meta\s+"
+                r'name=["\']robots["\']\s+'
+                r'content=["\'].*?noindex.*?["\']',
                 line,
             ):
                 return False
@@ -225,6 +238,17 @@ def is_valid_page(path, extended_path, is_index=True):
                 if match := re.search("{% extends [\"'](.*?)[\"'] %}", line):
                     if match.group(1) == extended_path:
                         return True
+
+    if "index.md" in str(path):
+        with path.open("r") as f:
+            for line in f.readlines():
+                if match := re.search(
+                    r"wrapper_template:\s*[\"']?(.*?)[\"']?$", line
+                ):
+                    template = match.group(1)
+                    if template in MARKDOWN_TEMPLATES:
+                        return True
+
     # If the file does not share the extended path, check if it extends the
     # base html
     return extends_base(path)
@@ -235,8 +259,9 @@ def get_extended_path(path):
     with path.open("r") as f:
         for line in f.readlines():
             # TODO: also match single quotes \'
-            if match := re.search("{% extends [\"'](.*?)[\"'] %}", line):
-                return match.group(1)
+            if ".html" in str(path):
+                if match := re.search("{% extends [\"'](.*?)[\"'] %}", line):
+                    return match.group(1)
 
 
 def update_tags(tags, new_tags):
@@ -300,10 +325,10 @@ def scan_directory(path_name, exclude_paths=None, base=None):
 
     is_index_page_valid = False
 
-    # Check if an index.html file exists in this directory
-    has_index = check_has_index(node_path)
+    # Check if an index.html or index.md file exists in this directory
+    (has_index, index_type) = check_has_index(node_path)
     if has_index:
-        index_path = node_path / "index.html"
+        index_path = node_path / ("index." + index_type)
         # Get the path extended by the index.html file
         extended_path = get_extended_path(index_path)
         # If the file is valid, add it as a child
