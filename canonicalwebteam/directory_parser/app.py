@@ -378,7 +378,7 @@ def generate_sitemap(directory_path, base_url, exclude_paths=None):
     """
     tree = scan_directory(directory_path, exclude_paths)
     xml_sitemap = flask.render_template(
-        "templates/sitemap_template.xml",
+        "sitemap_template.xml",
         tree=tree["children"],
         base_url=base_url,
     )
