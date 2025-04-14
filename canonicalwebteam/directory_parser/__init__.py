@@ -1,4 +1,6 @@
-from canonicalwebteam.directory_parser.app import (  # noqa
-    scan_directory,  # noqa
-    generate_sitemap,  # noqa
+# flake8: noqa
+
+from canonicalwebteam.directory_parser.app import (
+    scan_directory,
+    generate_sitemap,
 )

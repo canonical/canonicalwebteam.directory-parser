@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="canonicalwebteam.directory-parser",
-    version="1.1.4",
+    version="1.2.3",
     author="Canonical webteam",
     author_email="webteam@canonical.com",
     url="https://github.com/canonical/canonicalwebteam.directory-parser",
@@ -13,6 +13,10 @@ setup(
         "build sitemaps."
     ),
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "canonicalwebteam.directory_parser": ["templates/*.xml"],
+    },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=[
