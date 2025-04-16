@@ -8,31 +8,38 @@ Install the project with pip: `pip install canonicalwebteam.directory-parser`
 ## Using the directory parser
 
 ### Sitemap templates
-Include sitemap templates in your Flask app. Copy the following codeblock to where your application is instantiated e.g `app.py`.
+Include sitemap templates in your Flask app. Copy the following codeblock to where your application is instantiated e.g `app.py`. The template loader should be placed right after the app is instantiated.
 
 ```
+from jinja2 import ChoiceLoader, FileSystemLoader
 from pathlib import Path
 import canonicalwebteam.directory_parser as directory_parser
 
 
+# Set up Flask application
+app = FlaskBase(...)
+
+
+# Include directory parser templates
 directory_parser_templates = (
     Path(directory_parser.__file__).parent / "templates"
 )
 
 loader = ChoiceLoader(
     [
-        ...,
         FileSystemLoader(str(directory_parser_templates)),
     ]
 )
+
+app.jinja_loader = loader
 ```
 
 ### Generate sitemaps
 The `generate_sitemap` function will generate a sitemap given directory path and base url using the sitemap templates.
 
 ```
-# Dynamic sitemaps that do not need to be included in the sitemap tree
-# Differs from projects. Can be checked on /sitemap.xml
+# Dynamic sitemaps that do not need to be included in the sitemap tree.
+# Differ from project to project, can be checked on /sitemap.xml
 DYNAMIC_SITEMAPS = [
     "tutorials",
     "engage",
