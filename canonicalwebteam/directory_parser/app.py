@@ -373,8 +373,8 @@ def scan_directory(path_name, exclude_paths=None, base=None):
 
 def generate_sitemap(directory_path, base_url, exclude_paths=None):
     """
-    Generate sitemap given a directory path and a base url. It uses the
-    local project's templates to generate the sitemap.
+    Generate sitemap given a directory path and a base url using
+    the sitemap templates.
     """
     tree = scan_directory(directory_path, exclude_paths)
     xml_sitemap = flask.render_template(
