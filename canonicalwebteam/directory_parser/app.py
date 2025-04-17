@@ -22,7 +22,11 @@ TAG_MAPPING = {
     "link": ["meta_copydoc"],
 }
 ERROR_PAGES = [
+    "400.html",
+    "403.html",
     "404.html",
+    "410.html",
+    "429.html",
     "401.html",
     "500.html",
     "502.html",
