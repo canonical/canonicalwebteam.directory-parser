@@ -21,6 +21,16 @@ TAG_MAPPING = {
     "description": ["meta_description", "description"],
     "link": ["meta_copydoc"],
 }
+ERROR_PAGES = [
+    "400.html",
+    "403.html",
+    "404.html",
+    "410.html",
+    "429.html",
+    "401.html",
+    "500.html",
+    "502.html",
+]
 
 
 def is_index(path):
@@ -216,8 +226,8 @@ def is_valid_page(path, extended_path, is_index=True):
     - They extend from the base html.
     - Does not have "noindex" in the meta tags.
     - Does not live in a shared template directory.
-    - They are markdown files with a valid wrapper template
-
+    - They are markdown files with a valid wrapper template.
+    - They are not error pages.
     """
     if is_template(path):
         return False
@@ -231,6 +241,10 @@ def is_valid_page(path, extended_path, is_index=True):
                 line,
             ):
                 return False
+
+    end_path = str(path).split("/")[-1]
+    if end_path in ERROR_PAGES:
+        return False
 
     if not is_index and extended_path:
         with path.open("r") as f:
