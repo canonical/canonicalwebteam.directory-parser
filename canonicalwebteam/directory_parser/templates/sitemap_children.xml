@@ -1,10 +1,8 @@
 
-<url>
-  {% if not node["sitemap_exclude"] %}
+{% if not node["sitemap_exclude"] %}<url>
   <loc>{{ base_url }}{{ node["name"] }}</loc>
   {% if node["last_modified"] != None %}<lastmod>{{ node["last_modified"] }}</lastmod>{% endif %}
-  {% endif %}
-</url>
+</url>{% endif %}
 {%- if node["children"]|length > 0 -%}
   {%- for node in node["children"] %}
     {%- include "sitemap_children.xml" %}
