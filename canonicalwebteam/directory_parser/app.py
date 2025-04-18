@@ -336,7 +336,6 @@ def scan_directory(path_name, exclude_paths=None, base=None):
 
     # This will be the base html file extended by the index.html
     extended_path = None
-
     is_index_page_valid = False
 
     # Check if an index.html or index.md file exists in this directory
@@ -355,6 +354,8 @@ def scan_directory(path_name, exclude_paths=None, base=None):
             lastmod_time = get_git_last_modified_time(index_path)
             if lastmod_time:
                 node["last_modified"] = lastmod_time
+    else:
+        node["sitemap_exclude"] = True
 
     # Cycle through other files in this directory
     for child in node_path.iterdir():
