@@ -345,7 +345,7 @@ def scan_directory(path_name, exclude_paths=None, base=None):
     is_index_page_valid = False
 
     # Check if an index.html or index.md file exists in this directory
-    (has_index, index_type) = check_has_index(node_path)
+    has_index, index_type = check_has_index(node_path)
     if has_index:
         index_path = node_path / ("index." + index_type)
         # Get the path extended by the index.html file
