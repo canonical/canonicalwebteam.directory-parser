@@ -48,12 +48,18 @@ def check_has_index(path):
 
 def is_template(path):
     """
-    Return True if the file name starts with a template prefix.
+    Return True if the file/directory is a template rather than a page.
+
+    By convention, names starting with an underscore (e.g. _tutorial.html,
+    _thank-you.html) are partials or wrapper templates, not standalone pages,
+    so they are excluded from the sitemap.
 
     TODO: It is possible that valid page uris start with one of these prefixes.
     Instead, we could match the extended_path in index.html to files in the
     folder, and exclude files whose filename is in the extended path.
     """
+    if path.name.startswith("_"):
+        return True
     for prefix in TEMPLATE_PREFIXES:
         if path.name.startswith(prefix):
             return True
