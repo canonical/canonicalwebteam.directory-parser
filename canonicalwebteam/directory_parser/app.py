@@ -48,22 +48,27 @@ def check_has_index(path):
 
 def is_template(path):
     """
-    Return True if the file/directory is a template rather than a page.
-
-    By convention, names starting with an underscore (e.g. _tutorial.html,
-    _thank-you.html) are partials or wrapper templates, not standalone pages,
-    so they are excluded from the sitemap.
+    Return True if the file name starts with a base-template prefix.
 
     TODO: It is possible that valid page uris start with one of these prefixes.
     Instead, we could match the extended_path in index.html to files in the
     folder, and exclude files whose filename is in the extended path.
     """
-    if path.name.startswith("_"):
-        return True
     for prefix in TEMPLATE_PREFIXES:
         if path.name.startswith(prefix):
             return True
     return False
+
+
+def is_partial(path):
+    """
+    Return True if the file is a partial rather than a standalone page.
+
+    By convention, names starting with an underscore (e.g. _tutorial.html,
+    _thank-you.html) are partials or wrapper templates, not standalone pages,
+    so they are excluded from the sitemap.
+    """
+    return path.name.startswith("_")
 
 
 def append_base_path(base, path_name):
@@ -235,7 +240,7 @@ def is_valid_page(path, extended_path, is_index=True):
     - They are markdown files with a valid wrapper template.
     - They are not error pages.
     """
-    if is_template(path):
+    if is_template(path) or is_partial(path):
         return False
 
     with path.open("r") as f:
